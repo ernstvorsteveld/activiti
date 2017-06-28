@@ -1,0 +1,21 @@
+= Spring boot and Activiti
+Ernst Vorsteveld;
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 4
+:sectlinks:
+
+== Convention over configuration
+The name of the process files must extend *bpmn20.xml*
+
+== cURL requests
+
+* Start process:
+[source,json]
+curl -X POST http://localhost:8080/process/start
+
+* Count the process instances:
+[source,json]
+curl  http://localhost:8080/process/count

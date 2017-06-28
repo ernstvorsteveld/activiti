@@ -1,0 +1,8 @@
+.bpmn/
+.classpath
+.gradle/
+.idea/
+.metadata/
+.project
+.settings/
+bin/

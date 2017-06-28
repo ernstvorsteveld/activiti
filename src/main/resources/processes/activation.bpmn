@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
+  <process id="activationProcess" name="Activation process" isExecutable="true">
+    <startEvent id="startActivation" name="Start Activation"></startEvent>
+    <userTask id="clickActivationLink" name="Click Activation Link"></userTask>
+    <endEvent id="endActivation" name="End Activation"></endEvent>
+    <userTask id="completeProfile" name="Complete Profile"></userTask>
+    <exclusiveGateway id="isProfileCompletionGateway" name="Is Profile Completion Gateway" default="isActivateUserDefaultFlow"></exclusiveGateway>
+    <sequenceFlow id="isSetPasswordFlow" sourceRef="clickActivationLink" targetRef="isSetPasswordGateway"></sequenceFlow>
+    <sequenceFlow id="completeProfileFlow" sourceRef="isProfileCompletionGateway" targetRef="completeProfile">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${isProfileCompletion == true}]]></conditionExpression>
+    </sequenceFlow>
+    <exclusiveGateway id="isEmailVerificationGateway" name="Is Email Verification Gateway" default="isSetPasswordDefaultFlow"></exclusiveGateway>
+    <sequenceFlow id="isSetPasswordDefaultFlow" sourceRef="isEmailVerificationGateway" targetRef="isSetPasswordGateway"></sequenceFlow>
+    <sequenceFlow id="isEmailVerificationDefaultFlow" sourceRef="isIdentityConfirmationGateway" targetRef="isEmailVerificationGateway"></sequenceFlow>
+    <exclusiveGateway id="isSetPasswordGateway" name="Is Set Password Gateway" default="isProfileCompletionDefaultFlow"></exclusiveGateway>
+    <userTask id="setPassword" name="Set Password"></userTask>
+    <sequenceFlow id="setPasswordFlow" sourceRef="isSetPasswordGateway" targetRef="setPassword">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${isMinimalRegistration == false && isSetPassword == true}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="isProfileCompletionFlow" sourceRef="setPassword" targetRef="isProfileCompletionGateway"></sequenceFlow>
+    <sequenceFlow id="isProfileCompletionDefaultFlow" sourceRef="isSetPasswordGateway" targetRef="isProfileCompletionGateway"></sequenceFlow>
+    <serviceTask id="sendVerificationEmail" name="Send Verification Email" activiti:delegateExpression="${sendEmail}"></serviceTask>
+    <sequenceFlow id="clickActivationLinkFlow" sourceRef="sendVerificationEmail" targetRef="clickActivationLink"></sequenceFlow>
+    <sequenceFlow id="sendVerificationEmailFlow" sourceRef="isEmailVerificationGateway" targetRef="sendVerificationEmail">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${isMinimalRegistration == false && (sendActivationEmailToVerfiedEmailAddress == true || sendActivationEmailToUnverfiedEmailAddress == true)}]]></conditionExpression>
+    </sequenceFlow>
+    <exclusiveGateway id="isIdentityConfirmationGateway" name="Exclusive Gateway" default="isEmailVerificationDefaultFlow"></exclusiveGateway>
+    <sequenceFlow id="isIdentityConfirmationFlow" sourceRef="startActivation" targetRef="isIdentityConfirmationGateway"></sequenceFlow>
+    <serviceTask id="sendIdentityConfirmationEmail" name="Send Identity Confirmation Email" activiti:delegateExpression="${sendEmail}"></serviceTask>
+    <sequenceFlow id="sendIdentityConfirmationEmailFlow" sourceRef="isIdentityConfirmationGateway" targetRef="sendIdentityConfirmationEmail">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${sendIdentityConfirmation == true}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="isEmailVerificationFlow" sourceRef="sendIdentityConfirmationEmail" targetRef="isEmailVerificationGateway"></sequenceFlow>
+    <exclusiveGateway id="isActivateUserGateway" name="Is Activate User Gateway" default="endActivationDefaultFlow"></exclusiveGateway>
+    <sequenceFlow id="isActivateUserDefaultFlow" sourceRef="isProfileCompletionGateway" targetRef="isActivateUserGateway"></sequenceFlow>
+    <serviceTask id="activateUser" name="Activate User" activiti:delegateExpression="${userActivator}"></serviceTask>
+    <sequenceFlow id="isActivateUserFlow" sourceRef="completeProfile" targetRef="isActivateUserGateway"></sequenceFlow>
+    <sequenceFlow id="activateUserFlow" sourceRef="isActivateUserGateway" targetRef="activateUser">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${isUserActivation == true}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="endActivationFlow" sourceRef="activateUser" targetRef="endActivation"></sequenceFlow>
+    <sequenceFlow id="endActivationDefaultFlow" sourceRef="isActivateUserGateway" targetRef="endActivation"></sequenceFlow>
+    <boundaryEvent id="activationLinkTimer" name="Activation Link Timer" attachedToRef="clickActivationLink" cancelActivity="true">
+      <timerEventDefinition>
+        <timeDate>${activationExpiryDate}</timeDate>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <sequenceFlow id="activationLinkTimerExpired" sourceRef="activationLinkTimer" targetRef="endActivation"></sequenceFlow>
+    <boundaryEvent id="completeProfileTimer" name="Complete Profile Timer" attachedToRef="completeProfile" cancelActivity="true">
+      <timerEventDefinition>
+        <timeDate>${activationExpiryDate}</timeDate>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <sequenceFlow id="completeProfileTimerExpired" sourceRef="completeProfileTimer" targetRef="endActivation"></sequenceFlow>
+    <boundaryEvent id="setPasswordTimer" name="Set Password Timer" attachedToRef="setPassword" cancelActivity="true">
+      <timerEventDefinition>
+        <timeDate>${activationExpiryDate}</timeDate>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <sequenceFlow id="setPasswordTimerExpired" sourceRef="setPasswordTimer" targetRef="endActivation"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_activationProcess">
+    <bpmndi:BPMNPlane bpmnElement="activationProcess" id="BPMNPlane_activationProcess">
+      <bpmndi:BPMNShape bpmnElement="startActivation" id="BPMNShape_startActivation">
+        <omgdc:Bounds height="35.0" width="35.0" x="60.0" y="158.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="clickActivationLink" id="BPMNShape_clickActivationLink">
+        <omgdc:Bounds height="91.0" width="105.0" x="500.0" y="19.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="activationLinkTimer" id="BPMNShape_activationLinkTimer">
+        <omgdc:Bounds height="30.0" width="30.0" x="592.0" y="1.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endActivation" id="BPMNShape_endActivation">
+        <omgdc:Bounds height="35.0" width="35.0" x="1430.0" y="158.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="completeProfile" id="BPMNShape_completeProfile">
+        <omgdc:Bounds height="91.0" width="105.0" x="1000.0" y="30.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="completeProfileTimer" id="BPMNShape_completeProfileTimer">
+        <omgdc:Bounds height="30.0" width="30.0" x="1092.0" y="35.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="isProfileCompletionGateway" id="BPMNShape_isProfileCompletionGateway">
+        <omgdc:Bounds height="40.0" width="40.0" x="890.0" y="155.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="isEmailVerificationGateway" id="BPMNShape_isEmailVerificationGateway">
+        <omgdc:Bounds height="40.0" width="40.0" x="270.0" y="155.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="isSetPasswordGateway" id="BPMNShape_isSetPasswordGateway">
+        <omgdc:Bounds height="40.0" width="40.0" x="640.0" y="155.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="setPassword" id="BPMNShape_setPassword">
+        <omgdc:Bounds height="91.0" width="105.0" x="730.0" y="240.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="setPasswordTimer" id="BPMNShape_setPasswordTimer">
+        <omgdc:Bounds height="30.0" width="30.0" x="768.0" y="315.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="sendVerificationEmail" id="BPMNShape_sendVerificationEmail">
+        <omgdc:Bounds height="91.0" width="105.0" x="340.0" y="19.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="isIdentityConfirmationGateway" id="BPMNShape_isIdentityConfirmationGateway">
+        <omgdc:Bounds height="40.0" width="40.0" x="160.0" y="155.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="sendIdentityConfirmationEmail" id="BPMNShape_sendIdentityConfirmationEmail">
+        <omgdc:Bounds height="91.0" width="105.0" x="128.0" y="254.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="isActivateUserGateway" id="BPMNShape_isActivateUserGateway">
+        <omgdc:Bounds height="40.0" width="40.0" x="1180.0" y="155.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="activateUser" id="BPMNShape_activateUser">
+        <omgdc:Bounds height="91.0" width="105.0" x="1270.0" y="240.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="isSetPasswordFlow" id="BPMNEdge_isSetPasswordFlow">
+        <omgdi:waypoint x="605.0" y="64.0"></omgdi:waypoint>
+        <omgdi:waypoint x="659.0" y="64.0"></omgdi:waypoint>
+        <omgdi:waypoint x="660.0" y="155.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="completeProfileFlow" id="BPMNEdge_completeProfileFlow">
+        <omgdi:waypoint x="910.0" y="155.0"></omgdi:waypoint>
+        <omgdi:waypoint x="909.0" y="75.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1000.0" y="75.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="isSetPasswordDefaultFlow" id="BPMNEdge_isSetPasswordDefaultFlow">
+        <omgdi:waypoint x="310.0" y="175.0"></omgdi:waypoint>
+        <omgdi:waypoint x="392.0" y="175.0"></omgdi:waypoint>
+        <omgdi:waypoint x="640.0" y="175.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="isEmailVerificationDefaultFlow" id="BPMNEdge_isEmailVerificationDefaultFlow">
+        <omgdi:waypoint x="200.0" y="175.0"></omgdi:waypoint>
+        <omgdi:waypoint x="270.0" y="175.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="setPasswordFlow" id="BPMNEdge_setPasswordFlow">
+        <omgdi:waypoint x="660.0" y="195.0"></omgdi:waypoint>
+        <omgdi:waypoint x="660.0" y="285.0"></omgdi:waypoint>
+        <omgdi:waypoint x="730.0" y="285.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="isProfileCompletionFlow" id="BPMNEdge_isProfileCompletionFlow">
+        <omgdi:waypoint x="835.0" y="285.0"></omgdi:waypoint>
+        <omgdi:waypoint x="910.0" y="285.0"></omgdi:waypoint>
+        <omgdi:waypoint x="910.0" y="195.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="isProfileCompletionDefaultFlow" id="BPMNEdge_isProfileCompletionDefaultFlow">
+        <omgdi:waypoint x="680.0" y="175.0"></omgdi:waypoint>
+        <omgdi:waypoint x="890.0" y="175.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="clickActivationLinkFlow" id="BPMNEdge_clickActivationLinkFlow">
+        <omgdi:waypoint x="445.0" y="64.0"></omgdi:waypoint>
+        <omgdi:waypoint x="500.0" y="64.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sendVerificationEmailFlow" id="BPMNEdge_sendVerificationEmailFlow">
+        <omgdi:waypoint x="290.0" y="155.0"></omgdi:waypoint>
+        <omgdi:waypoint x="290.0" y="65.0"></omgdi:waypoint>
+        <omgdi:waypoint x="340.0" y="64.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="isIdentityConfirmationFlow" id="BPMNEdge_isIdentityConfirmationFlow">
+        <omgdi:waypoint x="95.0" y="175.0"></omgdi:waypoint>
+        <omgdi:waypoint x="160.0" y="175.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sendIdentityConfirmationEmailFlow" id="BPMNEdge_sendIdentityConfirmationEmailFlow">
+        <omgdi:waypoint x="180.0" y="195.0"></omgdi:waypoint>
+        <omgdi:waypoint x="180.0" y="254.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="isEmailVerificationFlow" id="BPMNEdge_isEmailVerificationFlow">
+        <omgdi:waypoint x="233.0" y="299.0"></omgdi:waypoint>
+        <omgdi:waypoint x="290.0" y="299.0"></omgdi:waypoint>
+        <omgdi:waypoint x="290.0" y="195.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="isActivateUserDefaultFlow" id="BPMNEdge_isActivateUserDefaultFlow">
+        <omgdi:waypoint x="930.0" y="175.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1180.0" y="175.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="isActivateUserFlow" id="BPMNEdge_isActivateUserFlow">
+        <omgdi:waypoint x="1105.0" y="75.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1200.0" y="75.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1200.0" y="155.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="activateUserFlow" id="BPMNEdge_activateUserFlow">
+        <omgdi:waypoint x="1200.0" y="195.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1200.0" y="285.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1270.0" y="285.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="endActivationFlow" id="BPMNEdge_endActivationFlow">
+        <omgdi:waypoint x="1375.0" y="285.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1417.0" y="284.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1447.0" y="193.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="endActivationDefaultFlow" id="BPMNEdge_endActivationDefaultFlow">
+        <omgdi:waypoint x="1220.0" y="175.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1430.0" y="175.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="activationLinkTimerExpired" id="BPMNEdge_activationLinkTimerExpired">
+        <omgdi:waypoint x="622.0" y="16.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1447.0" y="15.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1447.0" y="158.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="completeProfileTimerExpired" id="BPMNEdge_completeProfileTimerExpired">
+        <omgdi:waypoint x="1122.0" y="50.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1426.0" y="49.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1447.0" y="158.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="setPasswordTimerExpired" id="BPMNEdge_setPasswordTimerExpired">
+        <omgdi:waypoint x="783.0" y="345.0"></omgdi:waypoint>
+        <omgdi:waypoint x="782.0" y="367.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1447.0" y="367.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1447.0" y="193.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

@@ -1,0 +1,39 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:1.4.3.RELEASE"
+    }
+}
+
+
+apply plugin: 'eclipse'
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.4.1'
+}
+
+sourceCompatibility = 1.8
+version = '1.0'
+
+repositories {
+    mavenCentral()
+    maven { url 'http://repo.spring.io/release' }
+    maven { url "http://repo.spring.io/libs-milestone" }
+    maven { url "http://repo.spring.io/libs-snapshot-local" }
+}
+
+dependencies {
+    compile('org.activiti:activiti-spring-boot-starter-basic:6.0.0.Beta4')
+    compile("org.springframework.boot:spring-boot-starter-web")
+    compile("com.google.guava:guava:21.0")
+
+    compile("com.h2database:h2:1.4.187")
+
+    testCompile ("junit:junit:4.12")
+    testCompile("org.springframework.boot:spring-boot-starter-test")
+}
