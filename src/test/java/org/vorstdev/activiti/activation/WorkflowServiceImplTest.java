@@ -61,4 +61,9 @@ public class WorkflowServiceImplTest {
         activationService.done(start, (String) taskAttributes.get(TaskAttributes.taskId.name()), formAttributes);
     }
 
+    @Test
+    public void should_start_and_have_a_usertaks() {
+
+    }
+
 }

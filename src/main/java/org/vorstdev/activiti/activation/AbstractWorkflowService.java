@@ -3,6 +3,7 @@ package org.vorstdev.activiti.activation;
 import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vorstdev.activiti.UserContext;
 
 import java.util.Map;
 
@@ -12,6 +13,19 @@ import java.util.Map;
 public class AbstractWorkflowService {
 
     public static final Logger logger = LoggerFactory.getLogger(AbstractWorkflowService.class);
+
+
+    protected Map<String, Object> createVariablesMap(Map<String, Object> parameters) {
+        assertNotContainsStandardAttributes(parameters);
+        Map<String, Object> variables = Maps.newHashMap();
+        variables.put(ProcessInstanceAttributes.segment.name(), UserContext.getBrand());
+        variables.put(ProcessInstanceAttributes.brand.name(), UserContext.getBrand());
+        variables.put(ProcessInstanceAttributes.locale.name(), UserContext.getLocale());
+        variables.put(ProcessInstanceAttributes.host.name(), UserContext.getHost());
+        variables.put(ProcessInstanceAttributes.xhost.name(), UserContext.getXHost());
+        variables.putAll(parameters);
+        return variables;
+    }
 
     protected Map<String, Object> createVariablesMap(
             String segment, String brand, String locale,

@@ -5,6 +5,6 @@ package org.vorstdev.activiti.activation;
  */
 public enum ProcessInstanceAttributes {
 
-    segment, brand, locale;
+    segment, brand, locale, host, xhost;
 
 }

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.iwelcome.com/registration">
+    <process id="registration_process2" name="Registration process" isExecutable="true">
+        <startEvent id="startevent1" name="Start"></startEvent>
+
+        <userTask id="form_registration_utask_1" name="form_registration_step_1"></userTask>
+        <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="form_registration_utask_1"></sequenceFlow>
+
+        <userTask id="form_registration_utask_2" name="form_registration_step_2"></userTask>
+        <sequenceFlow id="flow2" sourceRef="form_registration_utask_1"
+                      targetRef="form_registration_utask_2"></sequenceFlow>
+
+        <serviceTask id="validate_email_task" name="validate email"
+                     activiti:class="org.vorstdev.activiti.helper.EmailJavaDelegate">
+        </serviceTask>
+        <sequenceFlow id="flow3" sourceRef="form_registration_utask_2" targetRef="validate_email_task"></sequenceFlow>
+
+        <endEvent id="endevent1" name="End"></endEvent>
+        <sequenceFlow id="flow4" sourceRef="validate_email_task" targetRef="endevent1"></sequenceFlow>
+    </process>
+</definitions>
